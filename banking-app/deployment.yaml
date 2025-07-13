@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: banking-app-deployment
+spec:
+  replicas: 2 # Let's run two instances for high availability
+  selector:
+    matchLabels:
+      app: banking-app
+  template:
+    metadata:
+      labels:
+        app: banking-app
+    spec:
+      containers:
+      - name: banking-app-streamlit
+        # This must be the full name of your image in ACR
+        image: mybankingappacr.azurecr.io/banking-app-streamlit:latest
+        ports:
+        - containerPort: 8501 # The port your Streamlit app runs on

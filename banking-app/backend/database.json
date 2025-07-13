@@ -1,0 +1,72 @@
+[
+    {
+        "fristName": "ullah",
+        "lastName": "ullah",
+        "age": 22,
+        "email": "ullah",
+        "phoneNumber": 22,
+        "password": "ullah",
+        "account": {
+            "account_number": 98917941545596,
+            "created_at": "2025-05-28",
+            "balance": 40,
+            "transactions": [
+                {
+                    "type": "credit",
+                    "amount": 20,
+                    "description": "hello",
+                    "to_account": 64110248736135,
+                    "transfer_date": "2025-05-29",
+                    "transfer_time": "00:07:16"
+                },
+                {
+                    "type": "credit",
+                    "amount": 20,
+                    "description": "kal dydy na",
+                    "to_account": 64110248736135,
+                    "transfer_date": "2025-05-29",
+                    "transfer_time": "00:08:25"
+                }
+            ]
+        }
+    },
+    {
+        "fristName": "saif",
+        "lastName": "saif",
+        "age": 11,
+        "email": "saif",
+        "phoneNumber": 1111,
+        "password": "saif",
+        "account": {
+            "account_number": 64110248736135,
+            "created_at": "12-21-2024",
+            "balance": 30,
+            "transactions": [
+                {
+                    "type": "debit",
+                    "amount": 20,
+                    "description": "hello",
+                    "to_account": 98917941545596,
+                    "transfer_date": "2025-05-29",
+                    "transfer_time": "00:07:16"
+                },
+                {
+                    "type": "debit",
+                    "amount": 20,
+                    "description": "kal dydy na",
+                    "to_account": 98917941545596,
+                    "transfer_date": "2025-05-29",
+                    "transfer_time": "00:08:25"
+                },
+                {
+                    "type": "credit",
+                    "amount": 20,
+                    "description": "kal dydy na",
+                    "to_account": 64110248736135,
+                    "transfer_date": "2025-05-29",
+                    "transfer_time": "00:08:25"
+                }
+            ]
+        }
+    }
+]
