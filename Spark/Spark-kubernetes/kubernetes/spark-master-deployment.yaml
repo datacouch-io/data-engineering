@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: spark-master
+  template:
+    metadata:
+      labels:
+        component: spark-master
+    spec:
+      containers:
+        - name: spark-master-svc
+          image: spark-python:3.5.6
+          command: ["/opt/spark/bin/spark-class"]
+          args: ["org.apache.spark.deploy.master.Master"]
+          ports:
+            - containerPort: 7077  # Spark master communication
+            - containerPort: 8080  # Spark Web UI
+          resources:
+            requests:
+              cpu: 100m
