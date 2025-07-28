@@ -13,6 +13,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: spark-master
+                name: spark-master-svc
                 port:
                   number: 8080
