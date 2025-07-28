@@ -1,6 +1,8 @@
 ````markdown
 # Deploying Apache Spark on Kubernetes
 
+## Pull the Spark-kubernetes repository and follow the below steps
+
 This project shows you how to deploy Apache Spark on a local Kubernetes cluster using Minikube.
 
 ---
