@@ -42,7 +42,7 @@ minikube dashboard
 ```bash
 eval $(minikube docker-env)
 chmod +x docker/common.sh docker/spark-master docker/spark-worker
-docker build -t spark-hadoop:2.2.1 -f ./docker/Dockerfile ./docker
+docker build -t spark-python:3.5.6 -f ./docker/Dockerfile ./docker
 ```
 
 ---
