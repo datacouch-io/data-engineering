@@ -17,10 +17,7 @@ You're in the right place! Follow the steps below to build and run this project.
 
 To run this project locally, install and configure the following tools:
 
-1. **[Hypervisor](https://kubernetes.io/docs/tasks/tools/install-minikube/#install-a-hypervisor)**  
-   Use [VirtualBox](https://www.virtualbox.org/wiki/Downloads), [HyperKit](https://github.com/moby/hyperkit), or another hypervisor supported by your OS.
-
-2. **[kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)**  
+1. **[kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)**  
    Required for interacting with your Kubernetes cluster.
 
 3. **[Minikube](https://github.com/kubernetes/minikube/releases)**  
