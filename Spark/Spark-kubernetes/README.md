@@ -1,5 +1,5 @@
 ````markdown
-# 🚀 Deploying Apache Spark on Kubernetes
+# Deploying Apache Spark on Kubernetes
 
 This project shows you how to deploy Apache Spark on a local Kubernetes cluster using Minikube.
 
@@ -11,9 +11,9 @@ You're in the right place! Follow the steps below to build and run this project.
 
 ---
 
-## ▶️ Want to Use This Project?
+## Want to Use This Project?
 
-### 📦 Minikube Setup
+### Minikube Setup
 
 To run this project locally, install and configure the following tools:
 
@@ -28,7 +28,7 @@ To run this project locally, install and configure the following tools:
 
 ---
 
-### 🖥️ Start the Minikube Cluster
+### Start the Minikube Cluster
 
 ```bash
 minikube start --memory 8192 --cpus 4
@@ -37,7 +37,7 @@ minikube dashboard
 
 ---
 
-### 🐳 Build the Docker Image
+### Build the Docker Image
 
 ```bash
 eval $(minikube docker-env)
@@ -47,7 +47,7 @@ docker build -t spark-python:3.5.6 -f ./docker/Dockerfile ./docker
 
 ---
 
-### ☸️ Create Deployments and Services
+### Create Deployments and Services
 
 ```bash
 kubectl create -f ./kubernetes/spark-master-deployment.yaml
@@ -57,7 +57,7 @@ kubectl create -f ./kubernetes/spark-worker-deployment.yaml
 
 ---
 
-### 🌐 Enable Ingress & Create Rule
+### Enable Ingress & Create Rule
 
 ```bash
 minikube addons enable ingress
@@ -66,13 +66,13 @@ kubectl apply -f ./kubernetes/minikube-ingress.yaml
 
 ---
 
-### 🧭 Update `/etc/hosts` for Local Access
+### Update `/etc/hosts` for Local Access
 
 ```bash
 echo "$(minikube ip) spark.local" | sudo tee -a /etc/hosts
 ```
 
-✅ Ensure the file contains an entry like:
+Ensure the file contains an entry like:
 
 ```
 192.168.49.2 spark.local
@@ -80,7 +80,7 @@ echo "$(minikube ip) spark.local" | sudo tee -a /etc/hosts
 
 ---
 
-## 🧪 Submit a PySpark Job
+## Submit a PySpark Job
 
 ### Get the Spark Master Pod Name
 
@@ -109,14 +109,14 @@ kubectl exec -it <spark-master-pod-name> -- bash
 
 ---
 
-## 🌍 Access the Spark UI
+## Access the Spark UI
 
 Visit the Spark Master UI at:
-👉 [http://spark.local](http://spark.local)
+[http://spark.local](http://spark.local)
 
 ---
 
-## 📁 Folder Structure Overview
+## Folder Structure Overview
 
 ```
 .
