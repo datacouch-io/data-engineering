@@ -6,7 +6,6 @@ This hands-on lab explores PostgreSQL's **partitioning** capabilities (range & l
 ---
 ## Prerequisites
 ````
-
 - Docker installed and running
 - Terminal or command-line access
 - No GUI required
