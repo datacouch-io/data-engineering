@@ -1,265 +1,222 @@
-# **PostgreSQL Partitioning & Performance Lab**
+# PostgreSQL Partitioning & Performance Lab
 
-## **Prerequisites**
+
+This hands-on lab explores PostgreSQL's **partitioning** capabilities (range & list) and performance tuning techniques like `EXPLAIN ANALYZE`, `VACUUM`, and indexing. It is designed for benchmarking and educational use.
+
+---
+## Prerequisites
+````
 
 - Docker installed and running
-
-- Terminal/Command Line access
-
-- PostgreSQL client (psql) installed (use Homebrew on Mac: `brew install libpq && brew link --force libpq`)
-
+- Terminal or command-line access
 - No GUI required
+````
+## Step 1: Start PostgreSQL with Docker
 
+```bash
+docker run --name pg-partition-lab -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:16
 
-## **Step 1: Start PostgreSQL with Docker**
+docker start pg-partition-lab        
 
-docker run --name pg-partition-lab -e POSTGRES\_PASSWORD=postgres -p 5432:5432 -d postgres:16
+docker exec -it pg-partition-lab psql -U postgres
+````
 
-docker start pg-lab        
+## Step 2: Create a Base Table (Non-Partitioned)
 
-docker exec -it pg-lab psql -U postgres
-
-\
-\
-
-
-**Step 3: Create a Base Table (Non-partitioned)**
-
-We’ll create a simple e-commerce-style `orders` table.
-
+```sql
 CREATE TABLE orders (
-
-  order\_id SERIAL PRIMARY KEY,
-
-  customer\_id INT NOT NULL,
-
-  order\_date DATE NOT NULL,
-
-  region TEXT NOT NULL,
-
-  amount NUMERIC(10, 2)
-
+  order_id SERIAL PRIMARY KEY,
+  customer_id INT NOT NULL,
+  order_date DATE NOT NULL,
+  region TEXT NOT NULL,
+  amount NUMERIC(10, 2)
 );
+```
 
+### Insert Sample Data (\~500K Rows)
 
-### **Insert Sample Data (\~500K rows)**
-
-INSERT INTO orders (customer\_id, order\_date, region, amount)
-
+```sql
+INSERT INTO orders (customer_id, order_date, region, amount)
 SELECT
+  (RANDOM() * 5000)::INT,
+  DATE '2021-01-01' + (RANDOM() * 1095)::INT,  -- ~3 years
+  CASE
+    WHEN RANDOM() < 0.25 THEN 'North'
+    WHEN RANDOM() < 0.5 THEN 'South'
+    WHEN RANDOM() < 0.75 THEN 'East'
+    ELSE 'West'
+  END,
+  ROUND((RANDOM() * 10000)::NUMERIC, 2)
+FROM generate_series(1, 500000);
+```
 
-  (RANDOM() \* 5000)::INT,
+---
 
-  DATE '2021-01-01' + (RANDOM() \* 1095)::INT, -- \~3 years
+## Step 3: Visualize the Data
 
-  CASE
+```sql
+-- Sample rows
+SELECT * FROM orders LIMIT 10;
 
-    WHEN RANDOM() < 0.25 THEN 'North'
+-- Region-wise distribution
+SELECT region, COUNT(*) FROM orders GROUP BY region;
+```
 
-    WHEN RANDOM() < 0.5 THEN 'South'
+---
 
-    WHEN RANDOM() < 0.75 THEN 'East'
+## Step 4: Create a Range Partitioned Table (By Order Date)
 
-    ELSE 'West'
+```sql
+CREATE TABLE orders_range (
+  order_id INT,
+  customer_id INT NOT NULL,
+  order_date DATE NOT NULL,
+  region TEXT NOT NULL,
+  amount NUMERIC(10,2),
+  PRIMARY KEY (order_id, order_date)
+) PARTITION BY RANGE (order_date);
+```
 
-  END,
+### Create Yearly Partitions
 
-  ROUND((RANDOM() \* 10000)::NUMERIC, 2)
-
-FROM generate\_series(1, 500000);
-
-\
-
-
-**Step 4: Visualize the Data**
-
-
-### **Check sample data:**
-
-SELECT \* FROM orders LIMIT 10;
-
-
-### **Group by region:**
-
-SELECT region, COUNT(\*) FROM orders GROUP BY region;
-
-\
-
-
-**Step 5: Create Range Partitioned Table**
-
-CREATE TABLE orders\_range (
-
-  order\_id INT,
-
-  customer\_id INT NOT NULL,
-
-  order\_date DATE NOT NULL,
-
-  region TEXT NOT NULL,
-
-  amount NUMERIC(10,2),
-
-  PRIMARY KEY (order\_id, order\_date)
-
-) PARTITION BY RANGE (order\_date);
-
-
-### **Create child partitions by year:**
-
-CREATE TABLE orders\_range\_2021 PARTITION OF orders\_range
-
+```sql
+CREATE TABLE orders_range_2021 PARTITION OF orders_range
 FOR VALUES FROM ('2021-01-01') TO ('2022-01-01');
 
-CREATE TABLE orders\_range\_2022 PARTITION OF orders\_range
-
+CREATE TABLE orders_range_2022 PARTITION OF orders_range
 FOR VALUES FROM ('2022-01-01') TO ('2023-01-01');
 
-CREATE TABLE orders\_range\_2023 PARTITION OF orders\_range
-
+CREATE TABLE orders_range_2023 PARTITION OF orders_range
 FOR VALUES FROM ('2023-01-01') TO ('2024-01-01');
+```
 
-\
+---
 
+## Step 5: Create a List Partitioned Table (By Region)
 
-**Step 6: Create List Partitioned Table (on** `region`**)**
-
-CREATE TABLE orders\_list (
-
-  order\_id INT,
-
-  customer\_id INT NOT NULL,
-
-  order\_date DATE NOT NULL,
-
-  region TEXT NOT NULL,
-
-  amount NUMERIC(10,2),
-
-  PRIMARY KEY (order\_id, region)
-
+```sql
+CREATE TABLE orders_list (
+  order_id INT,
+  customer_id INT NOT NULL,
+  order_date DATE NOT NULL,
+  region TEXT NOT NULL,
+  amount NUMERIC(10,2),
+  PRIMARY KEY (order_id, region)
 ) PARTITION BY LIST (region);
+```
 
-CREATE TABLE orders\_list\_north PARTITION OF orders\_list
+### Create Regional Partitions
 
-FOR VALUES IN ('North');
+```sql
+CREATE TABLE orders_list_north PARTITION OF orders_list FOR VALUES IN ('North');
+CREATE TABLE orders_list_south PARTITION OF orders_list FOR VALUES IN ('South');
+CREATE TABLE orders_list_east  PARTITION OF orders_list FOR VALUES IN ('East');
+CREATE TABLE orders_list_west  PARTITION OF orders_list FOR VALUES IN ('West');
+```
 
-CREATE TABLE orders\_list\_south PARTITION OF orders\_list
+---
 
-FOR VALUES IN ('South');
+## Step 6: Populate the Partitioned Tables
 
-CREATE TABLE orders\_list\_east PARTITION OF orders\_list
+```sql
+-- Range partition
+INSERT INTO orders_range
+SELECT * FROM orders
+WHERE order_date BETWEEN '2021-01-01' AND '2023-12-31';
 
-FOR VALUES IN ('East');
+-- List partition
+INSERT INTO orders_list
+SELECT * FROM orders;
+```
 
-CREATE TABLE orders\_list\_west PARTITION OF orders\_list
+---
 
-FOR VALUES IN ('West');
+## Step 7: Performance Testing with EXPLAIN ANALYZE
 
-\
+### Non-partitioned Query
 
-
-**Step 7: Populate Partitioned Tables**
-
-
-### **Copy data from** `orders`**:**
-
-INSERT INTO orders\_range
-
-SELECT \* FROM orders WHERE order\_date BETWEEN '2021-01-01' AND '2023-12-31';
-
-INSERT INTO orders\_list
-
-SELECT \* FROM orders;
-
-\
-\
-\
-\
-
-
-**Step 8: Query Analysis with EXPLAIN ANALYZE**
-
-
-### **Non-partitioned:**
-
+```sql
 EXPLAIN ANALYZE
+SELECT * FROM orders
+WHERE order_date BETWEEN '2022-01-01' AND '2022-12-31';
+```
 
-SELECT \* FROM orders WHERE order\_date BETWEEN '2022-01-01' AND '2022-12-31';
+### Range Partitioned Query
 
-
-### **Partitioned (Range):**
-
+```sql
 EXPLAIN ANALYZE
+SELECT * FROM orders_range
+WHERE order_date BETWEEN '2022-01-01' AND '2022-12-31';
+```
 
-SELECT \* FROM orders\_range WHERE order\_date BETWEEN '2022-01-01' AND '2022-12-31';
+### List Partitioned Query
 
-
-### **Partitioned (List):**
-
+```sql
 EXPLAIN ANALYZE
+SELECT * FROM orders_list
+WHERE region = 'South';
+```
 
-SELECT \* FROM orders\_list WHERE region = 'South';
+### Key Observations
 
-Look for:
+* Look for **Bitmap Heap Scan** vs **Sequential Scan**
+* Partition pruning should occur on partitioned queries
 
-- Bitmap Heap Scan vs Sequential Scan
+---
 
-- Partition Pruning in partitioned queries
+## Step 8: Vacuum & Autovacuum
 
-**Step 9: VACUUM & AUTOVACUUM**
+### Manual Vacuuming
 
+```sql
+VACUUM ANALYZE orders_range;
+VACUUM ANALYZE orders_list;
+```
 
-### **Manual Vacuum:**
+### View Autovacuum Status
 
-VACUUM ANALYZE orders\_range;
-
-VACUUM ANALYZE orders\_list;
-
-
-### **Enable autovacuum logging:**
-
+```sql
 SHOW autovacuum;
+```
+---
 
-(Enable logging in `postgresql.conf` if needed — not required in this lab.)
+## Step 9: Indexing Performance Test
 
-\
-\
+### Without Index
 
+```sql
+EXPLAIN ANALYZE
+SELECT * FROM orders_list WHERE customer_id = 42;
+```
 
-**Step 10: Index Testing**
+### Add Index
 
+```sql
+CREATE INDEX idx_orders_list_customer ON orders_list (customer_id);
 
-### **Without Index:**
+EXPLAIN ANALYZE
+SELECT * FROM orders_list WHERE customer_id = 42;
+```
 
-EXPLAIN ANALYZE SELECT \* FROM orders\_list WHERE customer\_id = 42;
+> Compare query speed before and after adding the index.
 
+---
 
-### **Add Index:**
+## Step 10: Clean Up (Optional)
 
-CREATE INDEX idx\_orders\_list\_customer ON orders\_list (customer\_id);
-
-EXPLAIN ANALYZE SELECT \* FROM orders\_list WHERE customer\_id = 42;
-
-Notice the speed difference.
-
-**Step 11: Clean Up (Optional)**
-
+```bash
 docker stop pg-partition-lab
-
 docker rm pg-partition-lab
+```
 
-\
+---
 
+## Bonus: View Partition Structure
 
-**Bonus: View Partition Structure**
-
+```sql
 SELECT
-
-  inhrelid::regclass AS child,
-
-  inhparent::regclass AS parent
-
-FROM pg\_inherits
-
-WHERE inhparent::regclass::text LIKE 'orders\_%';
+  inhrelid::regclass AS child,
+  inhparent::regclass AS parent
+FROM pg_inherits
+WHERE inhparent::regclass::text LIKE 'orders_%';
+```
